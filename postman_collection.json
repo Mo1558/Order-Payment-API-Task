@@ -1,0 +1,704 @@
+{
+	"info": {
+		"_postman_id": "c1f79a94-87d2-4e89-a212-order-payment-api",
+		"name": "Order and Payment Management API",
+		"description": "Production-grade, extendable Order and Payment Management API built with Laravel 12, JWT authentication, and the Strategy Design Pattern for payment gateways.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://127.0.0.1:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.authorization && jsonData.data.authorization.token) {",
+									"    pm.collectionVariables.set('jwt_token', jsonData.data.authorization.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Registers a new user account and returns a JWT token."
+					},
+					"response": [
+						{
+							"name": "Success (201 Created)",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"User successfully registered.\",\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"John Doe\",\n            \"email\": \"john.doe@example.com\",\n            \"created_at\": \"2026-10-20T19:00:00+00:00\"\n        },\n        \"authorization\": {\n            \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\",\n            \"token_type\": \"bearer\",\n            \"expires_in\": 3600\n        }\n    }\n}"
+						},
+						{
+							"name": "Validation Error (422)",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"message\": \"The email has already been taken.\",\n    \"errors\": {\n        \"email\": [\n            \"The provided email is already registered in our system.\"\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.authorization && jsonData.data.authorization.token) {",
+									"    pm.collectionVariables.set('jwt_token', jsonData.data.authorization.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Authenticates user with email and password and returns JWT token."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Login successful.\",\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"Demo Admin\",\n            \"email\": \"admin@example.com\",\n            \"created_at\": \"2026-10-20T19:00:00+00:00\"\n        },\n        \"authorization\": {\n            \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\",\n            \"token_type\": \"bearer\",\n            \"expires_in\": 3600\n        }\n    }\n}"
+						},
+						{
+							"name": "Invalid Credentials (401)",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": false,\n    \"message\": \"Invalid email or password.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Profile (Me)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "me"]
+						},
+						"description": "Returns current authenticated user details."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"User profile retrieved successfully.\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"Demo Admin\",\n        \"email\": \"admin@example.com\",\n        \"created_at\": \"2026-10-20T19:00:00+00:00\"\n    }\n}"
+						},
+						{
+							"name": "Unauthenticated (401)",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"message\": \"Unauthenticated.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refresh"]
+						},
+						"description": "Refreshes expired or current JWT token."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Token refreshed successfully.\",\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"Demo Admin\",\n            \"email\": \"admin@example.com\"\n        },\n        \"authorization\": {\n            \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\",\n            \"token_type\": \"bearer\",\n            \"expires_in\": 3600\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						},
+						"description": "Invalidates the current JWT token."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Successfully logged out.\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Create Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_name\": \"Alice Johnson\",\n    \"customer_email\": \"alice@example.com\",\n    \"customer_phone\": \"+1-555-0101\",\n    \"shipping_address\": \"123 Market St, San Francisco, CA\",\n    \"notes\": \"Leave package on front porch\",\n    \"currency\": \"USD\",\n    \"items\": [\n        {\n            \"product_name\": \"Mechanical Keyboard RGB\",\n            \"quantity\": 1,\n            \"price\": 129.99\n        },\n        {\n            \"product_name\": \"Desk Mousepad XL\",\n            \"quantity\": 2,\n            \"price\": 24.99\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/orders",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders"]
+						},
+						"description": "Creates a new order with items and calculates the total automatically. Initial status is 'pending'."
+					},
+					"response": [
+						{
+							"name": "Success (201 Created)",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Order created successfully.\",\n    \"data\": {\n        \"id\": 5,\n        \"order_number\": \"ORD-20261020-A1B2C3D4\",\n        \"user_id\": 1,\n        \"customer_name\": \"Alice Johnson\",\n        \"customer_email\": \"alice@example.com\",\n        \"customer_phone\": \"+1-555-0101\",\n        \"shipping_address\": \"123 Market St, San Francisco, CA\",\n        \"notes\": \"Leave package on front porch\",\n        \"status\": \"pending\",\n        \"total_amount\": 179.97,\n        \"paid_amount\": 0,\n        \"is_fully_paid\": false,\n        \"currency\": \"USD\",\n        \"items\": [\n            {\n                \"id\": 1,\n                \"order_id\": 5,\n                \"product_name\": \"Mechanical Keyboard RGB\",\n                \"quantity\": 1,\n                \"price\": 129.99,\n                \"subtotal\": 129.99\n            },\n            {\n                \"id\": 2,\n                \"order_id\": 5,\n                \"product_name\": \"Desk Mousepad XL\",\n                \"quantity\": 2,\n                \"price\": 24.99,\n                \"subtotal\": 49.98\n            }\n        ],\n        \"payments\": [],\n        \"created_at\": \"2026-10-20T19:15:00+00:00\"\n    }\n}"
+						},
+						{
+							"name": "Validation Error (422)",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"message\": \"The order must contain at least one item.\",\n    \"errors\": {\n        \"items\": [\n            \"The order must contain at least one item.\"\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "View Orders (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/orders?per_page=15",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders"],
+							"query": [
+								{ "key": "per_page", "value": "15" }
+							]
+						},
+						"description": "Retrieves paginated list of orders."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Orders retrieved successfully.\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"order_number\": \"ORD-20261020-0001\",\n            \"customer_name\": \"Alice Johnson\",\n            \"status\": \"pending\",\n            \"total_amount\": 179.98,\n            \"paid_amount\": 0,\n            \"currency\": \"USD\"\n        }\n    ],\n    \"pagination\": {\n        \"current_page\": 1,\n        \"per_page\": 15,\n        \"total\": 4,\n        \"last_page\": 1,\n        \"has_more\": false\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Filter Orders by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/orders?status=confirmed",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders"],
+							"query": [
+								{ "key": "status", "value": "confirmed" }
+							]
+						},
+						"description": "Filter orders by status: 'pending', 'confirmed', or 'cancelled'."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Orders retrieved successfully.\",\n    \"data\": [\n        {\n            \"id\": 2,\n            \"order_number\": \"ORD-20261020-0002\",\n            \"status\": \"confirmed\",\n            \"total_amount\": 299.00\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "View Single Order",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/orders/2",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "2"]
+						},
+						"description": "Retrieves single order with items and associated payment history."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Order retrieved successfully.\",\n    \"data\": {\n        \"id\": 2,\n        \"order_number\": \"ORD-20261020-0002\",\n        \"customer_name\": \"Bob Smith\",\n        \"status\": \"confirmed\",\n        \"total_amount\": 299.00,\n        \"items\": [\n            {\n                \"id\": 3,\n                \"product_name\": \"27-inch 4K Monitor\",\n                \"quantity\": 1,\n                \"price\": 299.00,\n                \"subtotal\": 299.00\n            }\n        ],\n        \"payments\": []\n    }\n}"
+						},
+						{
+							"name": "Not Found (404)",
+							"status": "Not Found",
+							"code": 404,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": false,\n    \"message\": \"Order not found.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Order",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"confirmed\",\n    \"notes\": \"Confirmed after phone verification with customer.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/orders/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "1"]
+						},
+						"description": "Updates order fields such as status (e.g. pending -> confirmed) or customer details."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Order updated successfully.\",\n    \"data\": {\n        \"id\": 1,\n        \"order_number\": \"ORD-20261020-0001\",\n        \"status\": \"confirmed\",\n        \"notes\": \"Confirmed after phone verification with customer.\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Order (Without Payments)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/orders/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "1"]
+						},
+						"description": "Deletes an order. Permitted ONLY if no payments are associated."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Order successfully deleted.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Order (With Payments - Rejection)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/orders/3",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "3"]
+						},
+						"description": "Attempts to delete an order with existing payments; rejected by Business Rule."
+					},
+					"response": [
+						{
+							"name": "Business Rule Violation (422)",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": false,\n    \"message\": \"Order #ORD-20261020-0003 cannot be deleted because it has associated payments.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "View Order Payments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/orders/3/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders", "3", "payments"]
+						},
+						"description": "Retrieves all payments specifically associated with the order."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Payments for Order #ORD-20261020-0003 retrieved successfully.\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"payment_reference\": \"PAY-20261020-ABC123\",\n            \"order_id\": 3,\n            \"amount\": 89.50,\n            \"currency\": \"USD\",\n            \"payment_method\": \"credit_card\",\n            \"status\": \"successful\",\n            \"transaction_id\": \"cc_txn_abc123xyz\"\n        }\n    ]\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "Process Payment - Credit Card",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"order_id\": 2,\n    \"payment_method\": \"credit_card\",\n    \"amount\": 299.00,\n    \"details\": {\n        \"card_number\": \"4111111111114242\",\n        \"exp_month\": \"12\",\n        \"exp_year\": \"2028\",\n        \"cvv\": \"123\",\n        \"cardholder_name\": \"Bob Smith\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"]
+						},
+						"description": "Processes payment using Credit Card strategy. Order must be in 'confirmed' status."
+					},
+					"response": [
+						{
+							"name": "Success (201 Created)",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Payment processed successfully.\",\n    \"data\": {\n        \"id\": 2,\n        \"payment_reference\": \"PAY-20261020-7H9K2L1M\",\n        \"order_id\": 2,\n        \"amount\": 299.00,\n        \"currency\": \"USD\",\n        \"payment_method\": \"credit_card\",\n        \"status\": \"successful\",\n        \"transaction_id\": \"cc_txn_a8d3e921f04b2c17\",\n        \"paid_at\": \"2026-10-20T19:20:00+00:00\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Process Payment - PayPal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"order_id\": 2,\n    \"payment_method\": \"paypal\",\n    \"amount\": 299.00,\n    \"details\": {\n        \"payer_email\": \"bob.payer@example.com\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"]
+						},
+						"description": "Processes payment using PayPal strategy."
+					},
+					"response": [
+						{
+							"name": "Success (201 Created)",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Payment processed successfully.\",\n    \"data\": {\n        \"id\": 3,\n        \"payment_reference\": \"PAY-20261020-PP921820\",\n        \"order_id\": 2,\n        \"amount\": 299.00,\n        \"currency\": \"USD\",\n        \"payment_method\": \"paypal\",\n        \"status\": \"successful\",\n        \"transaction_id\": \"PAYID-M9X201A83KD9102931\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Process Payment - Stripe",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"order_id\": 2,\n    \"payment_method\": \"stripe\",\n    \"amount\": 299.00,\n    \"details\": {\n        \"payment_method_id\": \"pm_card_visa\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"]
+						},
+						"description": "Processes payment using Stripe strategy."
+					},
+					"response": [
+						{
+							"name": "Success (201 Created)",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Payment processed successfully.\",\n    \"data\": {\n        \"id\": 4,\n        \"payment_reference\": \"PAY-20261020-ST102938\",\n        \"order_id\": 2,\n        \"amount\": 299.00,\n        \"currency\": \"USD\",\n        \"payment_method\": \"stripe\",\n        \"status\": \"successful\",\n        \"transaction_id\": \"pi_3MtwBwLkdIwHu7ix28a3tqZ0\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Process Payment - Unconfirmed Order (Rejection)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"order_id\": 1,\n    \"payment_method\": \"credit_card\",\n    \"amount\": 179.98\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"]
+						},
+						"description": "Attempts to process payment for an order in 'pending' status; rejected by Business Rule."
+					},
+					"response": [
+						{
+							"name": "Business Rule Violation (422)",
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": false,\n    \"message\": \"Payments can only be processed for orders in the 'confirmed' status. Current order status is 'pending'.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Process Payment - Simulated Failure",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"order_id\": 2,\n    \"payment_method\": \"credit_card\",\n    \"amount\": 299.00,\n    \"details\": {\n        \"card_number\": \"4000000000000000\",\n        \"exp_month\": \"12\",\n        \"exp_year\": \"2028\",\n        \"cvv\": \"123\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"]
+						},
+						"description": "Simulates payment decline/failure (e.g. card ending in 0000)."
+					},
+					"response": [
+						{
+							"name": "Failed Payment Simulation (201)",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Payment failed: Transaction declined: card declined by issuing bank or insufficient funds.\",\n    \"data\": {\n        \"id\": 5,\n        \"payment_reference\": \"PAY-20261020-F41L0001\",\n        \"order_id\": 2,\n        \"amount\": 299.00,\n        \"currency\": \"USD\",\n        \"payment_method\": \"credit_card\",\n        \"status\": \"failed\",\n        \"failure_reason\": \"Transaction declined: card declined by issuing bank or insufficient funds.\",\n        \"transaction_id\": null\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "View All Payments (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments?per_page=15",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments"],
+							"query": [
+								{ "key": "per_page", "value": "15" }
+							]
+						},
+						"description": "Retrieves paginated list of all payments."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Payments retrieved successfully.\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"payment_reference\": \"PAY-20261020-ABC123\",\n            \"order_id\": 3,\n            \"amount\": 89.50,\n            \"currency\": \"USD\",\n            \"payment_method\": \"credit_card\",\n            \"status\": \"successful\",\n            \"transaction_id\": \"cc_txn_abc123xyz\"\n        }\n    ],\n    \"pagination\": {\n        \"current_page\": 1,\n        \"per_page\": 15,\n        \"total\": 1,\n        \"last_page\": 1,\n        \"has_more\": false\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "View Single Payment",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["payments", "1"]
+						},
+						"description": "Retrieves single payment details by ID."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Payment retrieved successfully.\",\n    \"data\": {\n        \"id\": 1,\n        \"payment_reference\": \"PAY-20261020-ABC123\",\n        \"order_id\": 3,\n        \"amount\": 89.50,\n        \"currency\": \"USD\",\n        \"payment_method\": \"credit_card\",\n        \"status\": \"successful\",\n        \"transaction_id\": \"cc_txn_abc123xyz\"\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Payment Gateways",
+			"item": [
+				{
+					"name": "List Available Gateways",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payment-gateways",
+							"host": ["{{baseUrl}}"],
+							"path": ["payment-gateways"]
+						},
+						"description": "Returns list of active, registered payment gateways."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Available payment gateways retrieved successfully.\",\n    \"data\": [\n        {\n            \"name\": \"credit_card\",\n            \"display_name\": \"Credit / Debit Card\"\n        },\n        {\n            \"name\": \"paypal\",\n            \"display_name\": \"PayPal Express Checkout\"\n        },\n        {\n            \"name\": \"stripe\",\n            \"display_name\": \"Stripe Payments\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Configure Gateway in Database",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"credit_card\",\n    \"display_name\": \"Credit / Debit Card\",\n    \"is_active\": true,\n    \"config\": {\n        \"api_key\": \"custom_live_key_999\",\n        \"mode\": \"live\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payment-gateways",
+							"host": ["{{baseUrl}}"],
+							"path": ["payment-gateways"]
+						},
+						"description": "Dynamically enable, disable, or configure a payment gateway via database settings."
+					},
+					"response": [
+						{
+							"name": "Success (200 OK)",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Payment gateway configuration saved successfully.\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"credit_card\",\n        \"display_name\": \"Credit / Debit Card\",\n        \"is_active\": true,\n        \"config\": {\n            \"api_key\": \"custom_live_key_999\",\n            \"mode\": \"live\"\n        }\n    }\n}"
+						}
+					]
+				}
+			]
+		}
+	]
+}
