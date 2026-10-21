@@ -8,10 +8,14 @@
 
 A robust, enterprise-ready RESTful API for managing orders and payments built with **Laravel 12**. Designed strictly around **clean code principles**, **PSR-12 standards**, **Service-Repository separation**, and the **Strategy Design Pattern** for seamless payment gateway extensibility.
 
+> 📖 **Looking for a deep-dive explanation of what this project does and how it works under the hood?**  
+> Check out the complete architectural guide in [PROJECT_EXPLANATION.md](PROJECT_EXPLANATION.md).
+
 ---
 
 ## Table of Contents
 
+- [Deep-Dive Architecture & Explanation Guide](PROJECT_EXPLANATION.md)
 - [Core Features](#core-features)
 - [Architecture & Design Principles](#architecture--design-principles)
 - [Payment Gateway Extensibility (Strategy Pattern)](#payment-gateway-extensibility-strategy-pattern)
@@ -559,3 +563,4 @@ A ready-to-import Postman Collection v2.1.0 and Environment file are included in
    - Token refresh and blacklist logout are fully supported.
 4. **Database-Driven Gateway Fallback**:
    - If a gateway entry exists in the `payment_gateways` database table, its active status and configuration take precedence over `.env` defaults. If no record exists, the system seamlessly falls back to `.env` configuration.
+# Order-Payment-API-Task
