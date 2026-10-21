@@ -538,7 +538,7 @@ Run code style check (PSR-12):
 ## Postman Collection & Documentation
 
 A ready-to-import Postman Collection v2.1.0 and Environment file are included in the repository root:
-- **Collection**: [`postman_collection.json`](postman_collection.json)
+- **Collection**: [`Test Task.postman.json`](Test%20Task.postman.json) or [`postman_collection.json`](postman_collection.json)
 - **Environment**: [`postman_environment.json`](postman_environment.json)
 
 ### How to Import:
